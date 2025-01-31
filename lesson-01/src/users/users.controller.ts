@@ -7,9 +7,13 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { Role } from './types';
+import { UsersService } from './users.service';
 
 @Controller('users')
 export class UsersController {
+  constructor(private readonly userService: UsersService) {}
+
   /*
   GET /users
   GET /users/:id
@@ -18,14 +22,18 @@ export class UsersController {
   DELETE /users/:id
    */
   @Get()
-  findAll(@Query('role') role?: 'intern' | 'engineer' | 'admin') {
-    console.log('>>>role: ', role);
-    return [];
+  async findAll(@Query('role') role?: Role) {
+    const users = await this.userService.findAll(role);
+    return users;
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return { id };
+  async findOne(@Param('id') id: string) {
+    const userId = Number(id);
+    if (typeof userId !== 'number') return 'Not found';
+    const user = await this.userService.findOne(userId);
+    if (!user) return 'Not found';
+    return user;
   }
 
   @Post()
