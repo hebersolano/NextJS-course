@@ -8,15 +8,14 @@ export class UsersService {
 
   private async getUsers() {
     if (!this.users) {
-      this.users = await readJsonFile<Users>('src/users/users.json');
+      return (this.users = await readJsonFile<Users>('src/users/users.json'));
     }
     return this.users;
   }
 
-  private async addUser(user: User) {
-    const users = await this.getUsers();
+  private async updateUsers(users: Users) {
     if (!users) throw new Error('Users not found');
-    await updateFile('src/users/users.json', JSON.stringify(users?.push(user)));
+    await updateFile('src/users/users.json', JSON.stringify(users));
   }
 
   async findAll(role?: Role) {
@@ -38,7 +37,18 @@ export class UsersService {
   }
 
   async create(user: User) {
-    await this.addUser(user);
+    const users = await this.getUsers();
+    if (!users) return 'Error finding users';
+    await this.updateUsers(users.push(user));
     return user;
+  }
+
+  async update(id: number, user: User) {
+    const users = await this.getUsers();
+    if (!users) return undefined;
+    const userIndex = users?.findIndex((user) => user.id === id);
+    if (!userIndex || userIndex < 0) return undefined;
+    users[userIndex] = { ...users[userIndex], ...user };
+    this.updateUsers(users);
   }
 }
