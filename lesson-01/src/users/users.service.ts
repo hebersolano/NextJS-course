@@ -4,26 +4,28 @@ import { readJsonFile, updateFile } from 'src/lib/utils';
 
 @Injectable()
 export class UsersService {
-  private users: Users | undefined;
+  private users: Users;
 
   private async getUsers() {
     if (!this.users) {
-      return (this.users = await readJsonFile<Users>('src/users/users.json'));
+      const users = await readJsonFile<Users>('src/users/users.json');
+      if (!users || !(users instanceof Array))
+        throw new Error("Error reading users' database");
+      this.users = users;
     }
     return this.users;
   }
 
   private async updateUsers(users: Users) {
-    if (!users) throw new Error('Users not found');
     await updateFile('src/users/users.json', JSON.stringify(users));
+    this.users = users;
   }
 
   async findAll(role?: Role) {
     const users = await this.getUsers();
-    if (!users) throw new Error('Users not found');
 
     if (role) {
-      return users?.filter((user) => user.role === role);
+      return users.filter((user) => user.role === role);
     }
 
     return users;
@@ -31,24 +33,40 @@ export class UsersService {
 
   async findOne(id: number) {
     const users = await this.getUsers();
-    const user = users?.filter((user) => user.id === id);
-    if (!user) return undefined;
+    console.log('find one users', users);
+    const user = users?.find((user) => user.id === id);
+    if (!user) throw new Error('User not found');
     return user;
   }
 
   async create(user: User) {
     const users = await this.getUsers();
-    if (!users) return 'Error finding users';
-    await this.updateUsers(users.push(user));
-    return user;
+    const id = users[users.length - 1].id + 1;
+    const newUser = { ...user, id };
+    users.push(newUser);
+    await this.updateUsers(users);
+    return newUser;
   }
 
   async update(id: number, user: User) {
     const users = await this.getUsers();
-    if (!users) return undefined;
-    const userIndex = users?.findIndex((user) => user.id === id);
-    if (!userIndex || userIndex < 0) return undefined;
-    users[userIndex] = { ...users[userIndex], ...user };
-    this.updateUsers(users);
+    const index = users.findIndex((user) => user.id === id);
+    if (index === -1) throw new Error('User not found');
+    const oldUser = users[index];
+    users[index] = { ...oldUser, ...user, id: oldUser.id };
+    await this.updateUsers(users);
+    return users[index];
+  }
+
+  async delete(id: number) {
+    try {
+      const users = await this.getUsers();
+      const newUsers = users.filter((user) => user.id !== id);
+      await this.updateUsers(newUsers);
+      return true;
+    } catch (error) {
+      console.error('>>> user delete service error:', error);
+      return false;
+    }
   }
 }

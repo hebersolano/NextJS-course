@@ -30,15 +30,19 @@ export class UsersController {
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    const userId = Number(id);
-
-    if (typeof userId !== 'number' && !Number.isInteger(userId))
-      return 'Not found';
-
-    const user = await this.userService.findOne(userId);
-    if (!user) return 'Not found';
-
-    return user;
+    try {
+      const userId = Number(id);
+      if (typeof userId !== 'number') return 'Not found';
+      const user = await this.userService.findOne(userId);
+      if (!user) return 'Not found';
+      return user;
+    } catch (error) {
+      if (error instanceof Error) {
+        return error.message;
+      } else {
+        return 'My server error';
+      }
+    }
   }
 
   @Post()
@@ -48,12 +52,18 @@ export class UsersController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() userUpdate: object) {
-    return { id, userUpdate };
+  async update(@Param('id') id: string, @Body() userUpdate: User) {
+    const userId = Number(id);
+    if (typeof userId !== 'number') return 'Not found';
+    const updatedUser = await this.userService.update(userId, userUpdate);
+    return updatedUser;
   }
 
   @Delete(':id')
-  delete(@Param('id') id: string) {
-    return { id };
+  async delete(@Param('id') id: string) {
+    const userId = Number(id);
+    if (typeof userId !== 'number') return 'Not found';
+    const result = await this.userService.delete(userId);
+    return result;
   }
 }
