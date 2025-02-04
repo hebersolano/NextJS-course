@@ -4,11 +4,13 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
 } from '@nestjs/common';
-import { Role, User } from './types';
+import { Role } from './types';
+import { CreateUserDto, UpdateUserDto } from './users.dto';
 import { UsersService } from './users.service';
 
 @Controller('users')
@@ -29,11 +31,9 @@ export class UsersController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id', ParseIntPipe) id: number) {
     try {
-      const userId = Number(id);
-      if (typeof userId !== 'number') return 'Not found';
-      const user = await this.userService.findOne(userId);
+      const user = await this.userService.findOne(id);
       if (!user) return 'Not found';
       return user;
     } catch (error) {
@@ -46,24 +46,23 @@ export class UsersController {
   }
 
   @Post()
-  async create(@Body() user: User) {
-    const newUser = await this.userService.create(user);
+  async create(@Body() createUserDto: CreateUserDto) {
+    const newUser = await this.userService.create(createUserDto);
     return newUser;
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() userUpdate: User) {
-    const userId = Number(id);
-    if (typeof userId !== 'number') return 'Not found';
-    const updatedUser = await this.userService.update(userId, userUpdate);
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    const updatedUser = await this.userService.update(id, updateUserDto);
     return updatedUser;
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: string) {
-    const userId = Number(id);
-    if (typeof userId !== 'number') return 'Not found';
-    const result = await this.userService.delete(userId);
+  async delete(@Param('id', ParseIntPipe) id: number) {
+    const result = await this.userService.delete(id);
     return result;
   }
 }

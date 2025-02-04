@@ -6,10 +6,10 @@ export interface User {
   name: string;
   username: string;
   email: string;
-  address: Address;
-  phone: string;
-  website: string;
-  company: Company;
+  address?: Address;
+  phone?: string;
+  website?: string;
+  company?: Company;
 }
 
 export type Role = 'intern' | 'engineer' | 'admin';

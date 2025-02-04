@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { Role, User, Users } from './types';
 import { readJsonFile, updateFile } from 'src/lib/utils';
+import { Role, Users } from './types';
+import { CreateUserDto, UpdateUserDto } from './users.dto';
 
 @Injectable()
 export class UsersService {
@@ -39,7 +40,7 @@ export class UsersService {
     return user;
   }
 
-  async create(user: User) {
+  async create(user: CreateUserDto) {
     const users = await this.getUsers();
     const id = users[users.length - 1].id + 1;
     const newUser = { ...user, id };
@@ -48,7 +49,7 @@ export class UsersService {
     return newUser;
   }
 
-  async update(id: number, user: User) {
+  async update(id: number, user: UpdateUserDto) {
     const users = await this.getUsers();
     const index = users.findIndex((user) => user.id === id);
     if (index === -1) throw new Error('User not found');
